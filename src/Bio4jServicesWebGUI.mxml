@@ -3,7 +3,7 @@
 			   xmlns:s="library://ns.adobe.com/flex/spark" 
 			   xmlns:mx="library://ns.adobe.com/flex/mx"
 			   implements="com.era7.communication.interfaces.ServerCallable" 
-			   creationComplete="application1_creationCompleteHandler(event)">
+			   creationComplete="application1_creationCompleteHandler(event)" currentState="BASE_STATE">
 	<s:layout>
 		<s:VerticalLayout horizontalAlign="center" 
 						  paddingLeft="10" 
@@ -11,13 +11,22 @@
 						  paddingRight="10" 
 						  paddingBottom="10"/>
 	</s:layout>
+	<s:states>
+		<s:State name="BASE_STATE"/>
+		<s:State name="URL_STATE"/>
+		<s:State name="UPLOAD_RESULT_STATE"/>
+		<s:State name="LOADING_STATE"/>
+	</s:states>
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
 	<fx:Script>
 		<![CDATA[
 			import com.era7.bioinfo.bio4j.services.comm.ProteinMapper;
+			import com.era7.bioinfo.bio4j.services.comm.RequestList;
+			import com.era7.bioinfo.gui.EnterUrlTitleWindow;
 			import com.era7.bioinfo.gui.IconsManager;
+			import com.era7.bioinfo.gui.events.UrlEvent;
 			import com.era7.bioinfo.xml.Protein;
 			import com.era7.communication.managers.MainManager;
 			import com.era7.communication.xml.Request;
@@ -25,15 +34,22 @@
 			
 			import mx.controls.Alert;
 			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
 			
 			
 			
 			[Bindable]
 			private var serviceComboBoxDataProvider:XML = <items>
 													<item name="Download protein multifasta" />
+													<item name="Get protein multifasta (result in S3)" />
 												  </items>;	
 			
 			protected var proteinMapper:ProteinMapper = null;
+			
+			public const URL_STATE:String = "URL_STATE";
+			public const UPLOAD_RESULT_STATE:String = "UPLOAD_RESULT_STATE";
+			public const LOADING_STATE:String = "LOADING_STATE";
+			public const BASE_STATE:String = "BASE_STATE";
 			
 
 			protected function application1_creationCompleteHandler(event:FlexEvent):void
@@ -56,14 +72,18 @@
 			 */
 			public function processSuccessfulResponse(response:Response):void{
 				
+				if(response.getMethod() == RequestList.GET_PROTEIN_MULTIFASTA_REQUEST){
+					Alert.show("Result generated and uploaded to S3 successfully");
+					currentState = UPLOAD_RESULT_STATE;
+				}
 				
 			}
 			/**
 			 * 	PROCESS ERROR RESPONSE
 			 */
 			public function processErrorResponse(response:Response):void{
-				Alert.show(response.getErrorItem().getDescription());
-				
+				currentState = BASE_STATE;
+				Alert.show(response.getErrorItem().getDescription());				
 			}
 			/**
 			 * 	PROCESS NO SESSION RESPONSE
@@ -106,11 +126,21 @@
 				
 				return proteinsXML;
 			}
-
+			
 
 			protected function getResultsButton_clickHandler(event:MouseEvent):void
 			{
-				proteinMapper.downloadProteinMultifasta(getProteinsFromTextArea());
+				if(serviceComboBox.selectedItem.@name == "Download protein multifasta"){
+					
+					proteinMapper.downloadProteinMultifasta(getProteinsFromTextArea());
+					
+				}else if(serviceComboBox.selectedItem.@name == "Get protein multifasta (result in S3)"){
+					
+					proteinMapper.getProteinMultifastaResultInS3(urlTextInput.text,
+							bucketNameTextInput.text, fileNameTextInput.text);
+					currentState = LOADING_STATE;
+				}
+				
 			}
 			
 			
@@ -126,23 +156,39 @@
 			}
 			
 
+
+			protected function serviceComboBox_changeHandler(event:ListEvent):void
+			{
+				if(serviceComboBox.selectedItem.@name == "Get protein multifasta (result in S3)"){
+					currentState = UPLOAD_RESULT_STATE;
+				}else{
+					currentState = BASE_STATE;
+				}
+			}
+
 		]]>
 	</fx:Script>
 	<s:Label text="Bio4j Services" fontWeight="bold" fontSize="24" height="40"/>
 	<s:RichText text="Bio4j Services is a set of web based utilities using Bio4j as back-end." 
 				width="100%"/>
-	<s:VGroup width="100%" height="100%">
+	<s:VGroup width="100%" height="100%" horizontalAlign.LOADING_STATE="center">
 		<mx:HBox width="100%" paddingLeft="5" 
 				 paddingRight="5" 
 				 paddingTop="5" 
 				 paddingBottom="5" 
 				 cornerRadius="10" 
-				 verticalAlign="middle" backgroundColor="#EBEBEB">
+				 verticalAlign="middle" backgroundColor="#EBEBEB" includeIn="BASE_STATE,UPLOAD_RESULT_STATE,URL_STATE">
+			<fx:Script>
+				<![CDATA[
+					import mx.events.ListEvent;
+				]]>
+			</fx:Script>
 			
 			<s:Label text="Choose a service"/>
 			<mx:ComboBox id="serviceComboBox"
 						 dataProvider="{serviceComboBoxDataProvider.item}" 
-						 labelField="@name"/>
+						 labelField="@name"
+						 change="serviceComboBox_changeHandler(event)"/>
 		</mx:HBox>
 		<mx:VBox width="100%" 
 				 paddingLeft="10" 
@@ -150,13 +196,15 @@
 				 paddingRight="10" 
 				 paddingBottom="10" 
 				 cornerRadius="10" 
-				 backgroundColor="#E4E4E4">
-			<s:HGroup width="100%">
-				<mx:Spacer width="100%"/>
+				 backgroundColor="#E4E4E4" includeIn="BASE_STATE,UPLOAD_RESULT_STATE,URL_STATE">
+			<s:HGroup width="100%" verticalAlign="middle" includeIn="UPLOAD_RESULT_STATE,URL_STATE">
+				<s:Label text="URL:" fontWeight="bold"/>
+				<mx:Spacer includeIn="UPLOAD_RESULT_STATE" width="46"/>
+				<s:TextInput id="urlTextInput" width="100%"/>
 			</s:HGroup>				
 			<s:TextArea y="72" left="20" right="20" id="proteinIdsTextArea" 
-						editable="true"  width="100%" height="130"/>
-			<s:HGroup y="194" left="20" right="20" verticalAlign="middle" >
+						editable="true"  width="100%" height="130" includeIn="BASE_STATE"/>
+			<s:HGroup y="194" left="20" right="20" verticalAlign="middle"  includeIn="BASE_STATE">
 				<s:Label text="Separator:"/>
 				<s:RadioButton label=" Enter ('\n')" groupName="proteinSeparatorRadioButtonGroup" 
 							   id="enterProteinRadioButton" selected="true"/>
@@ -165,14 +213,24 @@
 				<s:RadioButton label=" Whitespace (' ')" groupName="proteinSeparatorRadioButtonGroup" 
 							   id="whiteSpaceProteinRadioButton" selected="false" />
 				<s:RadioButton label="Character:" groupName="proteinSeparatorRadioButtonGroup" 
-							   id="characterProteinRadioButton" selected="false" />
+							   id="characterProteinRadioButton" selected="false"/>
 				<s:TextInput enabled="true" id="characterProteinTextInput" width="18" maxChars="1"/>
 			</s:HGroup>	
+			<s:HGroup width="100%" verticalAlign="middle" includeIn="UPLOAD_RESULT_STATE">
+				<s:Label text="Bucket name:" fontWeight="bold"/>
+				<s:TextInput id="bucketNameTextInput" width="100%"/>
+				<s:Label text="File name:" fontWeight="bold"/>
+				<s:TextInput id="fileNameTextInput" width="100%"/>
+			</s:HGroup>
 		</mx:VBox>
-		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="right" gap="5">				  
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="right" gap="5" 
+				  includeIn="BASE_STATE,UPLOAD_RESULT_STATE,URL_STATE">				  
 			<s:Button id="getResultsButton"  
 					  label="Get results" click="getResultsButton_clickHandler(event)"/>
 		</s:HGroup>
+		<mx:Spacer includeIn="LOADING_STATE" height="45%"/>
+		<mx:SWFLoader 
+				source="{IconsManager.loadingSWF}" includeIn="LOADING_STATE"/>
 	</s:VGroup>
 	<mx:HBox width="100%" verticalAlign="middle" horizontalAlign="right">
 		<s:Label text="Powered by:"/>

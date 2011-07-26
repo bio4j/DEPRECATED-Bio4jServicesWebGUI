@@ -53,6 +53,32 @@ package com.era7.bioinfo.bio4j.services.comm
 			
 		}
 		
+		public function getProteinMultifastaResultInS3(url:String,
+								bucketName:String,
+								fileName:String):void{
+			
+			var temp:Request = new Request();
+			temp.setMethod(RequestList.GET_PROTEIN_MULTIFASTA_REQUEST);
+			
+			var params:Parameters = new Parameters();
+			params.addParametersContent(<url>{url}</url>);
+			params.addParametersContent(<file_name>{fileName}</file_name>);
+			params.addParametersContent(<bucket_name>{bucketName}</bucket_name>);
+			
+			temp.setParameters(params);
+			
+			var urlRequest:URLRequest = new URLRequest(UrlManager.GET_PROTEIN_MULTIFASTA_URL);
+			
+			urlRequest.method = URLRequestMethod.POST;
+			var vars:URLVariables = new URLVariables();		
+			
+			vars.request = temp.toString();
+			urlRequest.data = vars; 
+			
+			navigateToURL(urlRequest,"_self");
+			
+		}
+		
 		
 	}
 }

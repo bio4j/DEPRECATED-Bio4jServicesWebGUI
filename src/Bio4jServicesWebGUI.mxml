@@ -55,7 +55,7 @@
 			protected function application1_creationCompleteHandler(event:FlexEvent):void
 			{
 				MainManager.ADD_SESSION_ID_TO_REQUEST = false;
-				MainManager.DEBUG_MODE = true;	
+				MainManager.DEBUG_MODE = false;	
 				MainManager.REQUEST_TIMEOUT = 3600;
 				
 				proteinMapper = new ProteinMapper();
@@ -137,7 +137,9 @@
 				}else if(serviceComboBox.selectedItem.@name == "Get protein multifasta (result in S3)"){
 					
 					proteinMapper.getProteinMultifastaResultInS3(urlTextInput.text,
-							bucketNameTextInput.text, fileNameTextInput.text);
+							bucketNameTextInput.text, 
+							fileNameTextInput.text,
+							this);
 					currentState = LOADING_STATE;
 				}
 				

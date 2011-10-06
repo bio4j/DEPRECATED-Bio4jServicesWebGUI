@@ -3,7 +3,8 @@
 			   xmlns:s="library://ns.adobe.com/flex/spark" 
 			   xmlns:mx="library://ns.adobe.com/flex/mx"
 			   implements="com.era7.communication.interfaces.ServerCallable" 
-			   creationComplete="application1_creationCompleteHandler(event)" currentState="BASE_STATE">
+			   creationComplete="application1_creationCompleteHandler(event)" 
+			   currentState="BASE_STATE">
 	<s:layout>
 		<s:VerticalLayout horizontalAlign="center" 
 						  paddingLeft="10" 
@@ -42,6 +43,7 @@
 			private var serviceComboBoxDataProvider:XML = <items>
 													<item name="Download protein multifasta" />
 													<item name="Get protein multifasta (result in S3)" />
+													<item name="Get protein accessions for gene names (result in S3)" />
 												  </items>;	
 			
 			protected var proteinMapper:ProteinMapper = null;
@@ -73,6 +75,9 @@
 			public function processSuccessfulResponse(response:Response):void{
 				
 				if(response.getMethod() == RequestList.GET_PROTEIN_MULTIFASTA_REQUEST){
+					Alert.show("Result generated and uploaded to S3 successfully");
+					currentState = UPLOAD_RESULT_STATE;
+				}else if(response.getMethod() == RequestList.GET_GENE_UNIPROT_ACCESSIONS_REQUEST){
 					Alert.show("Result generated and uploaded to S3 successfully");
 					currentState = UPLOAD_RESULT_STATE;
 				}
@@ -141,6 +146,13 @@
 							fileNameTextInput.text,
 							this);
 					currentState = LOADING_STATE;
+				}else if(serviceComboBox.selectedItem.@name == "Get protein accessions for gene names (result in S3)"){
+					
+					proteinMapper.getProteinAccessionsForGeneNames(urlTextInput.text,
+						bucketNameTextInput.text, 
+						fileNameTextInput.text,
+						this);
+					currentState = LOADING_STATE;
 				}
 				
 			}
@@ -162,6 +174,8 @@
 			protected function serviceComboBox_changeHandler(event:ListEvent):void
 			{
 				if(serviceComboBox.selectedItem.@name == "Get protein multifasta (result in S3)"){
+					currentState = UPLOAD_RESULT_STATE;
+				}else if(serviceComboBox.selectedItem.@name == "Get protein accessions for gene names (result in S3)"){
 					currentState = UPLOAD_RESULT_STATE;
 				}else{
 					currentState = BASE_STATE;
@@ -228,7 +242,8 @@
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="right" gap="5" 
 				  includeIn="BASE_STATE,UPLOAD_RESULT_STATE,URL_STATE">				  
 			<s:Button id="getResultsButton"  
-					  label="Get results" click="getResultsButton_clickHandler(event)"/>
+					  label="Get results" 
+					  click="getResultsButton_clickHandler(event)"/>
 		</s:HGroup>
 		<mx:Spacer includeIn="LOADING_STATE" height="45%"/>
 		<mx:SWFLoader 

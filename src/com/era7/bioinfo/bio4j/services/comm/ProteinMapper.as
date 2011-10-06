@@ -68,16 +68,26 @@ package com.era7.bioinfo.bio4j.services.comm
 			
 			temp.setParameters(params);
 			
-			/*var urlRequest:URLRequest = new URLRequest(UrlManager.GET_PROTEIN_MULTIFASTA_URL);
-			
-			urlRequest.method = URLRequestMethod.POST;
-			var vars:URLVariables = new URLVariables();		
-			
-			vars.request = temp.toString();
-			urlRequest.data = vars; 
-			navigateToURL(urlRequest,"_self");*/
-			
 			this.mainManager.loadRequest(temp,serverCallable,UrlManager.GET_PROTEIN_MULTIFASTA_URL);
+			
+		}
+		
+		public function getProteinAccessionsForGeneNames(url:String,
+													   bucketName:String,
+													   fileName:String,
+													   serverCallable:ServerCallable):void{
+			
+			var temp:Request = new Request();
+			temp.setMethod(RequestList.GET_GENE_UNIPROT_ACCESSIONS_REQUEST);
+			
+			var params:Parameters = new Parameters();
+			params.addParametersContent(<url>{url}</url>);
+			params.addParametersContent(<file_name>{fileName}</file_name>);
+			params.addParametersContent(<bucket_name>{bucketName}</bucket_name>);
+			
+			temp.setParameters(params);
+			
+			this.mainManager.loadRequest(temp,serverCallable,UrlManager.GET_GENE_UNIPROT_ACCESSIONS_URL);
 			
 		}
 		

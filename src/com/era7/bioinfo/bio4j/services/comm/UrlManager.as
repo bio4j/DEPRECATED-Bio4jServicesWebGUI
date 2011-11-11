@@ -11,5 +11,6 @@ package com.era7.bioinfo.bio4j.services.comm
 		public static const DOWNLOAD_PROTEIN_MULTIFASTA_URL:String = BASE_URL + "DownloadProteinMultifasta";
 		public static const GET_PROTEIN_MULTIFASTA_URL:String = BASE_URL + "GetProteinMultifasta";
 		public static const GET_GENE_UNIPROT_ACCESSIONS_URL:String = BASE_URL + "GetGeneUniprotAccessions";
+		public static const GET_CUFFLINKS_FULL_REPORT_URL:String = BASE_URL + "GetCuffLinksFullReport";
 	}
 }

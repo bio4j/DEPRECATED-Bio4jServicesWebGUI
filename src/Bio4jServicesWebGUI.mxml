@@ -44,6 +44,7 @@
 													<item name="Download protein multifasta" />
 													<item name="Get protein multifasta (result in S3)" />
 													<item name="Get protein accessions for gene names (result in S3)" />
+													<item name="Get CuffLinks full report (results in S3)" />
 												  </items>;	
 			
 			protected var proteinMapper:ProteinMapper = null;
@@ -78,6 +79,9 @@
 					Alert.show("Result generated and uploaded to S3 successfully");
 					currentState = UPLOAD_RESULT_STATE;
 				}else if(response.getMethod() == RequestList.GET_GENE_UNIPROT_ACCESSIONS_REQUEST){
+					Alert.show("Result generated and uploaded to S3 successfully");
+					currentState = UPLOAD_RESULT_STATE;
+				}else if(response.getMethod() == RequestList.GET_CUFFLINKS_FULL_REPORT_REQUEST){
 					Alert.show("Result generated and uploaded to S3 successfully");
 					currentState = UPLOAD_RESULT_STATE;
 				}
@@ -153,6 +157,13 @@
 						fileNameTextInput.text,
 						this);
 					currentState = LOADING_STATE;
+				}else if(serviceComboBox.selectedItem.@name == "Get CuffLinks full report (results in S3)"){
+					
+					proteinMapper.getCuffLinksFullReport(urlTextInput.text,
+						bucketNameTextInput.text, 
+						fileNameTextInput.text,
+						this);
+					currentState = LOADING_STATE;
 				}
 				
 			}
@@ -176,6 +187,8 @@
 				if(serviceComboBox.selectedItem.@name == "Get protein multifasta (result in S3)"){
 					currentState = UPLOAD_RESULT_STATE;
 				}else if(serviceComboBox.selectedItem.@name == "Get protein accessions for gene names (result in S3)"){
+					currentState = UPLOAD_RESULT_STATE;
+				}else if(serviceComboBox.selectedItem.@name == "Get CuffLinks full report (results in S3)"){
 					currentState = UPLOAD_RESULT_STATE;
 				}else{
 					currentState = BASE_STATE;

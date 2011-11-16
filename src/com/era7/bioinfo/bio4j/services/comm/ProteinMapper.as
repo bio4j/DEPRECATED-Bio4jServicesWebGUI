@@ -91,18 +91,20 @@ package com.era7.bioinfo.bio4j.services.comm
 			
 		}
 		
-		public function getCuffLinksFullReport(url:String,
-														 bucketName:String,
-														 fileName:String,
-														 serverCallable:ServerCallable):void{
+		public function getCuffLinksFullReport(inputBucketName:String,
+											   inputFileName:String,
+											   outputBucketName:String,
+											   outputFileName:String,
+											   serverCallable:ServerCallable):void{
 			
 			var temp:Request = new Request();
 			temp.setMethod(RequestList.GET_CUFFLINKS_FULL_REPORT_REQUEST);
 			
 			var params:Parameters = new Parameters();
-			params.addParametersContent(<url>{url}</url>);
-			params.addParametersContent(<file_name>{fileName}</file_name>);
-			params.addParametersContent(<bucket_name>{bucketName}</bucket_name>);
+			params.addParametersContent(<input_bucket>{inputBucketName}</input_bucket>);
+			params.addParametersContent(<input_file_name>{inputFileName}</input_file_name>);
+			params.addParametersContent(<output_bucket_name>{outputBucketName}</output_bucket_name>);
+			params.addParametersContent(<output_file_name>{outputFileName}</output_file_name>);
 			
 			temp.setParameters(params);
 			

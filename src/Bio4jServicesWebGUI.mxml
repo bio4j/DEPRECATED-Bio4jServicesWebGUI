@@ -17,6 +17,7 @@
 		<s:State name="URL_STATE"/>
 		<s:State name="UPLOAD_RESULT_STATE"/>
 		<s:State name="LOADING_STATE"/>
+		<s:State name="UPLOAD_FROM_S3_RESULT_STATE"/>
 	</s:states>
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
@@ -51,6 +52,7 @@
 			
 			public const URL_STATE:String = "URL_STATE";
 			public const UPLOAD_RESULT_STATE:String = "UPLOAD_RESULT_STATE";
+			public const UPLOAD_FROM_S3_RESULT_STATE:String = "UPLOAD_FROM_S3_RESULT_STATE";
 			public const LOADING_STATE:String = "LOADING_STATE";
 			public const BASE_STATE:String = "BASE_STATE";
 			
@@ -83,7 +85,7 @@
 					currentState = UPLOAD_RESULT_STATE;
 				}else if(response.getMethod() == RequestList.GET_CUFFLINKS_FULL_REPORT_REQUEST){
 					Alert.show("Result generated and uploaded to S3 successfully");
-					currentState = UPLOAD_RESULT_STATE;
+					currentState = UPLOAD_FROM_S3_RESULT_STATE;
 				}
 				
 			}
@@ -146,22 +148,23 @@
 				}else if(serviceComboBox.selectedItem.@name == "Get protein multifasta (result in S3)"){
 					
 					proteinMapper.getProteinMultifastaResultInS3(urlTextInput.text,
-							bucketNameTextInput.text, 
-							fileNameTextInput.text,
+							outputBucketNameTextInput.text, 
+							outputFileNameTextInput.text,
 							this);
 					currentState = LOADING_STATE;
 				}else if(serviceComboBox.selectedItem.@name == "Get protein accessions for gene names (result in S3)"){
 					
 					proteinMapper.getProteinAccessionsForGeneNames(urlTextInput.text,
-						bucketNameTextInput.text, 
-						fileNameTextInput.text,
+						outputBucketNameTextInput.text, 
+						outputFileNameTextInput.text,
 						this);
 					currentState = LOADING_STATE;
 				}else if(serviceComboBox.selectedItem.@name == "Get CuffLinks full report (results in S3)"){
 					
-					proteinMapper.getCuffLinksFullReport(urlTextInput.text,
-						bucketNameTextInput.text, 
-						fileNameTextInput.text,
+					proteinMapper.getCuffLinksFullReport(inputBucketNameTextInput.text,
+						inputFileName.text,
+						outputBucketNameTextInput.text, 
+						outputFileNameTextInput.text,
 						this);
 					currentState = LOADING_STATE;
 				}
@@ -189,7 +192,7 @@
 				}else if(serviceComboBox.selectedItem.@name == "Get protein accessions for gene names (result in S3)"){
 					currentState = UPLOAD_RESULT_STATE;
 				}else if(serviceComboBox.selectedItem.@name == "Get CuffLinks full report (results in S3)"){
-					currentState = UPLOAD_RESULT_STATE;
+					currentState = UPLOAD_FROM_S3_RESULT_STATE;
 				}else{
 					currentState = BASE_STATE;
 				}
@@ -206,7 +209,9 @@
 				 paddingTop="5" 
 				 paddingBottom="5" 
 				 cornerRadius="10" 
-				 verticalAlign="middle" backgroundColor="#EBEBEB" includeIn="BASE_STATE,UPLOAD_RESULT_STATE,URL_STATE">
+				 verticalAlign="middle" 
+				 backgroundColor="#EBEBEB" 
+				 includeIn="BASE_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">
 			<fx:Script>
 				<![CDATA[
 					import mx.events.ListEvent;
@@ -225,11 +230,27 @@
 				 paddingRight="10" 
 				 paddingBottom="10" 
 				 cornerRadius="10" 
-				 backgroundColor="#E4E4E4" includeIn="BASE_STATE,UPLOAD_RESULT_STATE,URL_STATE">
-			<s:HGroup width="100%" verticalAlign="middle" includeIn="UPLOAD_RESULT_STATE,URL_STATE">
-				<s:Label text="URL:" fontWeight="bold"/>
-				<mx:Spacer includeIn="UPLOAD_RESULT_STATE" width="46"/>
-				<s:TextInput id="urlTextInput" width="100%"/>
+				 backgroundColor="#E4E4E4" 
+				 includeIn="BASE_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">
+			<s:HGroup width="100%" 
+					  verticalAlign="middle" 
+					  includeIn="UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">
+				<s:Label text="URL:" 
+						 fontWeight="bold" 
+						 text.UPLOAD_FROM_S3_RESULT_STATE="Input bucket name:" 
+						 width.UPLOAD_FROM_S3_RESULT_STATE="118"/>
+				<mx:Spacer includeIn="UPLOAD_RESULT_STATE" 
+						   width="46"/>
+				<s:TextInput id="urlTextInput" width="100%" 
+							 includeIn="UPLOAD_RESULT_STATE,URL_STATE"/>
+				<s:TextInput includeIn="UPLOAD_FROM_S3_RESULT_STATE" 
+							 id="inputBucketNameTextInput" 
+							 width="220"/>
+				<s:Label fontWeight="bold" 
+						 text="Input file name:" 
+						 includeIn="UPLOAD_FROM_S3_RESULT_STATE" 
+						 width="98"/>
+				<s:TextInput includeIn="UPLOAD_FROM_S3_RESULT_STATE" width="100%" id="inputFileName"/>
 			</s:HGroup>				
 			<s:TextArea y="72" left="20" right="20" id="proteinIdsTextArea" 
 						editable="true"  width="100%" height="130" includeIn="BASE_STATE"/>
@@ -245,15 +266,25 @@
 							   id="characterProteinRadioButton" selected="false"/>
 				<s:TextInput enabled="true" id="characterProteinTextInput" width="18" maxChars="1"/>
 			</s:HGroup>	
-			<s:HGroup width="100%" verticalAlign="middle" includeIn="UPLOAD_RESULT_STATE">
-				<s:Label text="Bucket name:" fontWeight="bold"/>
-				<s:TextInput id="bucketNameTextInput" width="100%"/>
-				<s:Label text="File name:" fontWeight="bold"/>
-				<s:TextInput id="fileNameTextInput" width="100%"/>
+			<s:HGroup width="100%" 
+					  verticalAlign="middle" 
+					  includeIn="UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE">
+				<s:Label text="Bucket name:" 
+						 fontWeight="bold" 
+						 text.UPLOAD_FROM_S3_RESULT_STATE="Output bucket name:" 
+						 text.UPLOAD_RESULT_STATE="Output bucket name:"/>
+				<s:TextInput id="outputBucketNameTextInput" 
+							 width="100%" 
+							 width.UPLOAD_FROM_S3_RESULT_STATE="220"/>
+				<s:Label text="File name:" fontWeight="bold" 
+						 text.UPLOAD_FROM_S3_RESULT_STATE="Output file name:" 
+						 text.UPLOAD_RESULT_STATE="Output file name:"/>
+				<s:TextInput id="outputFileNameTextInput" 
+							 width="100%"/>
 			</s:HGroup>
 		</mx:VBox>
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="right" gap="5" 
-				  includeIn="BASE_STATE,UPLOAD_RESULT_STATE,URL_STATE">				  
+				  includeIn="BASE_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">				  
 			<s:Button id="getResultsButton"  
 					  label="Get results" 
 					  click="getResultsButton_clickHandler(event)"/>

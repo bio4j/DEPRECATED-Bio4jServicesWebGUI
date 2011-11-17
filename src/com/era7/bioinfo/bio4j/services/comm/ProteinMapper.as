@@ -113,5 +113,37 @@ package com.era7.bioinfo.bio4j.services.comm
 		}
 		
 		
+		public function cufflinksBasicQualityControl(diffFile:String,
+											   xmlFile:String,
+											   tsvFile:String,
+											   goBioProcFile:String,
+											   goCellCompFile:String,
+											   goMolFuncFile:String,
+											   inputBucketName:String,
+											   outputBucketName:String,
+											   outputFile:String,
+											   serverCallable:ServerCallable):void{
+			
+			var temp:Request = new Request();
+			temp.setMethod(RequestList.CUFFLINKS_BASIC_QUALITY_CONTROL_REQUEST);
+			
+			var params:Parameters = new Parameters();
+			params.addParametersContent(<input_bucket_name>{inputBucketName}</input_bucket_name>);
+			params.addParametersContent(<output_bucket_name>{outputBucketName}</output_bucket_name>);
+			params.addParametersContent(<diff_file>{diffFile}</diff_file>);
+			params.addParametersContent(<xml_file>{xmlFile}</xml_file>);
+			params.addParametersContent(<tsv_file>{tsvFile}</tsv_file>);
+			params.addParametersContent(<go_bio_proc_file>{goBioProcFile}</go_bio_proc_file>);
+			params.addParametersContent(<go_cell_comp_file>{goCellCompFile}</go_cell_comp_file>);
+			params.addParametersContent(<go_mol_func_file>{goMolFuncFile}</go_mol_func_file>);
+			params.addParametersContent(<results_file>{outputFile}</results_file>);
+			
+			temp.setParameters(params);
+			
+			this.mainManager.loadRequest(temp,serverCallable,UrlManager.CUFFLINKS_BASIC_QUALITY_CONTROL_URL);
+			
+		}
+		
+		
 	}
 }

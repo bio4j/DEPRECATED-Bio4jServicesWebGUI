@@ -18,6 +18,7 @@
 		<s:State name="UPLOAD_RESULT_STATE"/>
 		<s:State name="LOADING_STATE"/>
 		<s:State name="UPLOAD_FROM_S3_RESULT_STATE"/>
+		<s:State name="CUFFLINKS_QUALITY_CONTROL_STATE"/>
 	</s:states>
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
@@ -46,6 +47,7 @@
 													<item name="Get protein multifasta (result in S3)" />
 													<item name="Get protein accessions for gene names (result in S3)" />
 													<item name="Get CuffLinks full report (results in S3)" />
+													<item name="Cufflinks quality control (result in S3)" />
 												  </items>;	
 			
 			protected var proteinMapper:ProteinMapper = null;
@@ -53,6 +55,7 @@
 			public const URL_STATE:String = "URL_STATE";
 			public const UPLOAD_RESULT_STATE:String = "UPLOAD_RESULT_STATE";
 			public const UPLOAD_FROM_S3_RESULT_STATE:String = "UPLOAD_FROM_S3_RESULT_STATE";
+			public const CUFFLINKS_QUALITY_CONTROL_STATE:String = "CUFFLINKS_QUALITY_CONTROL_STATE";
 			public const LOADING_STATE:String = "LOADING_STATE";
 			public const BASE_STATE:String = "BASE_STATE";
 			
@@ -86,6 +89,9 @@
 				}else if(response.getMethod() == RequestList.GET_CUFFLINKS_FULL_REPORT_REQUEST){
 					Alert.show("Result generated and uploaded to S3 successfully");
 					currentState = UPLOAD_FROM_S3_RESULT_STATE;
+				}else if(response.getMethod() == RequestList.CUFFLINKS_BASIC_QUALITY_CONTROL_REQUEST){
+					Alert.show("Result generated and uploaded to S3 successfully");
+					currentState = CUFFLINKS_QUALITY_CONTROL_STATE;
 				}
 				
 			}
@@ -152,6 +158,7 @@
 							outputFileNameTextInput.text,
 							this);
 					currentState = LOADING_STATE;
+					
 				}else if(serviceComboBox.selectedItem.@name == "Get protein accessions for gene names (result in S3)"){
 					
 					proteinMapper.getProteinAccessionsForGeneNames(urlTextInput.text,
@@ -159,11 +166,26 @@
 						outputFileNameTextInput.text,
 						this);
 					currentState = LOADING_STATE;
+					
 				}else if(serviceComboBox.selectedItem.@name == "Get CuffLinks full report (results in S3)"){
 					
 					proteinMapper.getCuffLinksFullReport(inputBucketNameTextInput.text,
 						inputFileName.text,
 						outputBucketNameTextInput.text, 
+						outputFileNameTextInput.text,
+						this);
+					currentState = LOADING_STATE;
+					
+				}else if(serviceComboBox.selectedItem.@name == "Cufflinks quality control (result in S3)"){
+					
+					proteinMapper.cufflinksBasicQualityControl(diffFileNameTextInput.text,
+						xmlFileNameTextInput.text,
+						tsvFileNameTextInput.text,
+						bioProcFileNameTextInput.text,
+						cellCompFileNameTextInput.text,
+						molFuncFileNameTextInput.text,
+						inputBucketNameTextInput.text,
+						outputBucketNameTextInput.text,
 						outputFileNameTextInput.text,
 						this);
 					currentState = LOADING_STATE;
@@ -193,6 +215,8 @@
 					currentState = UPLOAD_RESULT_STATE;
 				}else if(serviceComboBox.selectedItem.@name == "Get CuffLinks full report (results in S3)"){
 					currentState = UPLOAD_FROM_S3_RESULT_STATE;
+				}else if(serviceComboBox.selectedItem.@name == "Cufflinks quality control (result in S3)"){
+					currentState = CUFFLINKS_QUALITY_CONTROL_STATE;
 				}else{
 					currentState = BASE_STATE;
 				}
@@ -211,7 +235,7 @@
 				 cornerRadius="10" 
 				 verticalAlign="middle" 
 				 backgroundColor="#EBEBEB" 
-				 includeIn="BASE_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">
+				 includeIn="BASE_STATE,CUFFLINKS_QUALITY_CONTROL_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">
 			<fx:Script>
 				<![CDATA[
 					import mx.events.ListEvent;
@@ -231,27 +255,75 @@
 				 paddingBottom="10" 
 				 cornerRadius="10" 
 				 backgroundColor="#E4E4E4" 
-				 includeIn="BASE_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">
+				 includeIn="BASE_STATE,CUFFLINKS_QUALITY_CONTROL_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">
 			<s:HGroup width="100%" 
 					  verticalAlign="middle" 
-					  includeIn="UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">
+					  includeIn="CUFFLINKS_QUALITY_CONTROL_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">
 				<s:Label text="URL:" 
 						 fontWeight="bold" 
 						 text.UPLOAD_FROM_S3_RESULT_STATE="Input bucket name:" 
-						 width.UPLOAD_FROM_S3_RESULT_STATE="118"/>
+						 width.UPLOAD_FROM_S3_RESULT_STATE="118" text.CUFFLINKS_QUALITY_CONTROL_STATE="Input bucket name:" width.CUFFLINKS_QUALITY_CONTROL_STATE="118" width.UPLOAD_RESULT_STATE="{outputBucketLabel.width}"/>
 				<mx:Spacer includeIn="UPLOAD_RESULT_STATE" 
 						   width="46"/>
 				<s:TextInput id="urlTextInput" width="100%" 
 							 includeIn="UPLOAD_RESULT_STATE,URL_STATE"/>
-				<s:TextInput includeIn="UPLOAD_FROM_S3_RESULT_STATE" 
+				<s:TextInput includeIn="CUFFLINKS_QUALITY_CONTROL_STATE,UPLOAD_FROM_S3_RESULT_STATE" 
 							 id="inputBucketNameTextInput" 
-							 width="220"/>
+							 width="220" width.CUFFLINKS_QUALITY_CONTROL_STATE="{outputBucketNameTextInput.width}"/>
 				<s:Label fontWeight="bold" 
 						 text="Input file name:" 
 						 includeIn="UPLOAD_FROM_S3_RESULT_STATE" 
 						 width="98"/>
 				<s:TextInput includeIn="UPLOAD_FROM_S3_RESULT_STATE" width="100%" id="inputFileName"/>
 			</s:HGroup>				
+			<s:HGroup width="100%" 
+					  verticalAlign="middle" 
+			 includeIn="CUFFLINKS_QUALITY_CONTROL_STATE">
+				<s:Label 
+						 fontWeight="bold" 
+						 text="Diff file name:" width="118"/>
+				<s:TextInput 
+							 id="diffFileNameTextInput" 
+							 width="100%"/>
+				<s:Label 
+						 fontWeight="bold" 
+						 text="XML file name:" width="98"/>
+				<s:TextInput 
+							 id="xmlFileNameTextInput" 
+							 width="100%"/>
+			</s:HGroup>
+			<s:HGroup width="100%" 
+					  verticalAlign="middle" 
+			 includeIn="CUFFLINKS_QUALITY_CONTROL_STATE">
+				<s:Label 
+						 fontWeight="bold" 
+						 text="TSV file name:" width="118"/>
+				<s:TextInput 
+							 id="tsvFileNameTextInput" 
+							 width="100%"/>
+				<s:Label 
+						 fontWeight="bold" 
+						 text="Mol. func. GO file:" width="98"/>
+				<s:TextInput 
+							 id="molFuncFileNameTextInput" 
+							 width="100%"/>
+			</s:HGroup>
+			<s:HGroup width="100%" 
+					  verticalAlign="middle" 
+			 includeIn="CUFFLINKS_QUALITY_CONTROL_STATE">
+				<s:Label 
+						 fontWeight="bold" 
+						 text="Cell. comp. GO file:" width="118"/>
+				<s:TextInput 
+							 id="cellCompFileNameTextInput" 
+							 width="100%"/>
+				<s:Label 
+						 fontWeight="bold" 
+						 text="Biol.proc. GO file:"/>
+				<s:TextInput 
+							 id="bioProcFileNameTextInput" 
+							 width="100%"/>
+			</s:HGroup>
 			<s:TextArea y="72" left="20" right="20" id="proteinIdsTextArea" 
 						editable="true"  width="100%" height="130" includeIn="BASE_STATE"/>
 			<s:HGroup y="194" left="20" right="20" verticalAlign="middle"  includeIn="BASE_STATE">
@@ -268,23 +340,23 @@
 			</s:HGroup>	
 			<s:HGroup width="100%" 
 					  verticalAlign="middle" 
-					  includeIn="UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE">
+					  includeIn="CUFFLINKS_QUALITY_CONTROL_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE">
 				<s:Label text="Bucket name:" 
 						 fontWeight="bold" 
 						 text.UPLOAD_FROM_S3_RESULT_STATE="Output bucket name:" 
-						 text.UPLOAD_RESULT_STATE="Output bucket name:"/>
+						 text.UPLOAD_RESULT_STATE="Output bucket name:" text.CUFFLINKS_QUALITY_CONTROL_STATE="Output bucket name:" id="outputBucketLabel"/>
 				<s:TextInput id="outputBucketNameTextInput" 
 							 width="100%" 
-							 width.UPLOAD_FROM_S3_RESULT_STATE="220"/>
+							 width.UPLOAD_FROM_S3_RESULT_STATE="220" width.CUFFLINKS_QUALITY_CONTROL_STATE="100%"/>
 				<s:Label text="File name:" fontWeight="bold" 
 						 text.UPLOAD_FROM_S3_RESULT_STATE="Output file name:" 
-						 text.UPLOAD_RESULT_STATE="Output file name:"/>
+						 text.UPLOAD_RESULT_STATE="Output file name:" text.CUFFLINKS_QUALITY_CONTROL_STATE="Output file name:"/>
 				<s:TextInput id="outputFileNameTextInput" 
 							 width="100%"/>
 			</s:HGroup>
 		</mx:VBox>
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="right" gap="5" 
-				  includeIn="BASE_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">				  
+				  includeIn="BASE_STATE,CUFFLINKS_QUALITY_CONTROL_STATE,UPLOAD_FROM_S3_RESULT_STATE,UPLOAD_RESULT_STATE,URL_STATE">				  
 			<s:Button id="getResultsButton"  
 					  label="Get results" 
 					  click="getResultsButton_clickHandler(event)"/>
